@@ -38,10 +38,12 @@ python dashboard.py --port 9000
 
 1. 装 Python 3（安装时勾选 **Add python.exe to PATH**）和 [GitHub CLI](https://cli.github.com/)
 2. 登录：`gh auth login`（选 GitHub.com / HTTPS / 用浏览器登录）
-3. 克隆本仓库，双击 `start_panel.bat` 即可
-4. 账号不是 `skipandgoon` 时，改 `dashboard.py` 顶部的 `OWNER`，或先 `set FORK_WATCH_OWNER=你的用户名`
+3. 设置要监控的账号（必须，代码里不再写死）：
+   - Windows：`setx FORK_WATCH_OWNER 你的用户名`，或启动时传参数 `start_panel.bat 你的用户名`
+   - macOS / Linux：`FORK_WATCH_OWNER=你的用户名 python3 dashboard.py`
+4. 克隆本仓库，双击 `start_panel.bat` 即可
 
-macOS / Linux 没有 `.bat`，直接 `python3 dashboard.py`，浏览器打开 `http://127.0.0.1:8770/`。
+macOS / Linux 没有 `.bat`，直接 `FORK_WATCH_OWNER=你的用户名 python3 dashboard.py`，浏览器打开 `http://127.0.0.1:8770/`。
 
 ## 手机访问（可选）
 

@@ -1,5 +1,13 @@
 @echo off
 setlocal
+if not "%~1"=="" set "FORK_WATCH_OWNER=%~1"
+if not defined FORK_WATCH_OWNER (
+  echo [x] 未设置 GitHub 账号。
+  echo     先执行：setx FORK_WATCH_OWNER 你的用户名
+  echo     或直接：start_panel.bat 你的用户名
+  pause
+  exit /b 1
+)
 set "PY="
 cd /d "%~dp0"
 where pythonw >nul 2>&1 && set "PY=pythonw"

@@ -15,7 +15,7 @@ import os
 import subprocess
 import sys
 
-OWNER = os.environ.get("FORK_WATCH_OWNER", "skipandgoon")
+OWNER = os.environ.get("FORK_WATCH_OWNER", "")
 STATE = os.path.join(
     os.environ.get("LOCALAPPDATA", ""),
     "hermes", "profiles", "checkin", "cache", "fork_watch_state.json",
@@ -108,6 +108,9 @@ def main():
     global OWNER
     if args.owner:
         OWNER = args.owner
+    if not OWNER:
+        print("缺少账号：请设置环境变量 FORK_WATCH_OWNER=你的GitHub用户名，或加 --owner 你的用户名")
+        return 2
 
     forks = [compare(f) for f in list_forks()]
     forks.sort(key=lambda f: (-(f["missing"] or 0), f["repo"].lower()))

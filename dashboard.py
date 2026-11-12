@@ -22,7 +22,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-OWNER = os.environ.get("FORK_WATCH_OWNER", "skipandgoon")
+OWNER = os.environ.get("FORK_WATCH_OWNER", "")
 CACHE_TTL = 300
 LOCK = threading.Lock()
 CACHE = {"at": 0, "data": None}
@@ -53,7 +53,11 @@ GRAPHQL = """query($cursor: String) {
       }
     }
   }
-}""" % OWNER
+}"""
+
+
+def graphql_query():
+    return GRAPHQL % OWNER
 
 
 def log(msg):
@@ -74,7 +78,7 @@ def gh(args, check=True):
 def list_repos():
     repos, cursor = [], None
     while True:
-        cmd = ["api", "graphql", "-f", "query=" + GRAPHQL]
+        cmd = ["api", "graphql", "-f", "query=" + graphql_query()]
         if cursor:
             cmd += ["-f", "cursor=" + cursor]
         page = json.loads(gh(cmd).stdout)["data"]["user"]["repositories"]
@@ -105,9 +109,18 @@ def compare(repo):
         return repo
     up_owner = repo["upstream"].split("/")[0]
     expr = "%s...%s:%s" % (repo["branch"], up_owner, repo["upstream_branch"] or "main")
-    p = gh(["api", "repos/%s/compare/%s" % (repo["repo"], expr),
-            "--jq", "{ahead_by,behind_by,head:.commits[-1].sha,date:.commits[-1].commit.author.date}"],
-           check=False)
+    p = None
+    for attempt in range(3):
+        p = gh(["api", "repos/%s/compare/%s" % (repo["repo"], expr),
+                "--jq", "{ahead_by,behind_by,head:.commits[-1].sha,date:.commits[-1].commit.author.date}"],
+               check=False)
+        if p.returncode == 0:
+            break
+        err = (p.stderr or "") + (p.stdout or "")
+        if any(k in err for k in ("EOF", "timeout", "connection reset", "TLS handshake", "502", "503")):
+            time.sleep(1.2 * (attempt + 1))
+            continue
+        break
     if p.returncode != 0:
         repo.update(missing=None, own=None, upstream_head="", state="error",
                     error=(p.stderr or "").strip().splitlines()[-1][:120] if (p.stderr or "").strip() else "compare failed")
@@ -489,7 +502,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8770)
     ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--owner", default="", help="GitHub 用户名（也可用环境变量 FORK_WATCH_OWNER）")
     args = ap.parse_args()
+    global OWNER
+    if args.owner:
+        OWNER = args.owner
+    if not OWNER:
+        log("缺少账号：请设置环境变量 FORK_WATCH_OWNER=你的GitHub用户名，或加 --owner 你的用户名")
+        raise SystemExit(2)
     # 后台预热：端口先起来，页面不用干等 20 秒
     def warm():
         try:
