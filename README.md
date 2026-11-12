@@ -49,7 +49,7 @@ macOS / Linux 没有 `.bat`，直接 `FORK_WATCH_OWNER=你的用户名 python3 d
 
 `start_panel.bat` 会自动检测 Tailscale：
 
-- 有 Tailscale：只监听 Tailscale 地址（如 `100.75.244.123`），浏览器也打开这个地址
+- 有 Tailscale：只监听 Tailscale 地址（形如 `100.XX.XX.XX`），浏览器也打开这个地址
 - 没有 Tailscale：回落到 `127.0.0.1`
 
 所以在同一 tailnet 的手机/电脑上直接打开：
