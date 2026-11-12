@@ -17,6 +17,9 @@ if not defined PY (
   pause
   exit /b 1
 )
-start "" "%PY%" dashboard.py
+rem 有 Tailscale 就只监听 Tailscale 地址（手机/别的电脑能访问，局域网不暴露）
+set "HOST=127.0.0.1"
+for /f "delims=" %%i in ('tailscale ip -4 2^>nul') do set "HOST=%%i"
+start "" "%PY%" dashboard.py --host %HOST%
 ping -n 3 127.0.0.1 >nul
-start "" "http://127.0.0.1:8770/"
+start "" "http://%HOST%:8770/"

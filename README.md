@@ -45,13 +45,26 @@ python dashboard.py --port 9000
 
 macOS / Linux 没有 `.bat`，直接 `FORK_WATCH_OWNER=你的用户名 python3 dashboard.py`，浏览器打开 `http://127.0.0.1:8770/`。
 
-## 手机访问（可选）
+## 手机 / 其他电脑访问（Tailscale）
 
-面板默认只监听 `127.0.0.1`。需要局域网/手机访问时：
+`start_panel.bat` 会自动检测 Tailscale：
 
-```bash
-python dashboard.py --host 0.0.0.0
+- 有 Tailscale：只监听 Tailscale 地址（如 `100.75.244.123`），浏览器也打开这个地址
+- 没有 Tailscale：回落到 `127.0.0.1`
+
+所以在同一 tailnet 的手机/电脑上直接打开：
+
+```
+http://<这台机器的 Tailscale IP>:8770/
 ```
 
-然后从手机打开 `http://<本机局域网 IP>:8770/`。注意这会把面板暴露给同网段设备
-（面板能触发 fork 更新），只在自己信任的网络里开。
+查本机 Tailscale IP：`tailscale ip -4`。
+
+也可以手动指定监听地址：
+
+```bash
+python dashboard.py --host 0.0.0.0      # 局域网 + Tailscale 都能访问
+python dashboard.py --host 100.x.y.z    # 只监听 Tailscale
+```
+
+面板没有登录验证，能打开页面的人就能触发 fork 更新；只在自己的 tailnet/可信网络里用。
