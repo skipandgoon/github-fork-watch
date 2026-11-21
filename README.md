@@ -6,7 +6,8 @@
 
 - 双击 `start_panel.bat`：后台启动服务并打开浏览器
 - 双击 `stop_panel.bat`：停止服务
-- 地址：http://127.0.0.1:8770/
+- 地址：**http://127.0.0.1:8770/**（本机）；装了 Tailscale 时同一端口也监听 Tailscale 地址，手机/别的电脑可用
+- 启动日志：脚本目录下 `dashboard.log`（`pythonw` 无控制台，静默失败看这个）
 
 命令行方式：
 

@@ -61,9 +61,14 @@ def graphql_query():
 
 
 def log(msg):
-    """pythonw 没有控制台，print 可能抛异常；日志失败不影响服务。"""
+    """pythonw 没有控制台，print 可能抛异常；同时落一份 dashboard.log，静默启动失败才有据可查。"""
     try:
         print(msg, flush=True)
+    except Exception:
+        pass
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "dashboard.log"), "a", encoding="utf-8") as f:
+            f.write("%s %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), msg))
     except Exception:
         pass
 
@@ -524,8 +529,25 @@ def main():
         pass
     import atexit
     atexit.register(lambda: os.path.exists(pidfile) and os.remove(pidfile))
-    srv = ThreadingHTTPServer((args.host, args.port), Handler)
-    log("GitHub 项目面板: http://%s:%d" % (args.host, args.port))
+    hosts = [args.host]
+    if args.host not in ("127.0.0.1", "localhost"):
+        hosts.append("127.0.0.1")  # 同时留本机入口，否则 127.0.0.1 打不开会被当成"坏了"
+    srv = None
+    for h in hosts:
+        try:
+            s = ThreadingHTTPServer((h, args.port), Handler)
+        except OSError as e:
+            log("监听 %s:%d 失败: %s" % (h, args.port, e))
+            continue
+        if srv is None:
+            srv = s
+            log("GitHub 项目面板: http://%s:%d" % (h, args.port))
+        else:
+            log("本机入口: http://%s:%d" % (h, args.port))
+            threading.Thread(target=s.serve_forever, daemon=True).start()
+    if srv is None:
+        log("所有地址都没监听成功，退出")
+        raise SystemExit(1)
     srv.serve_forever()
 
 
